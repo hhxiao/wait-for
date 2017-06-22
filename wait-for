@@ -2,6 +2,7 @@
 
 TIMEOUT=15
 QUIET=0
+HOSTS=();
 
 echoerr() {
   if [ "$QUIET" -ne 1 ]; then printf "%s\n" "$*" 1>&2; fi
@@ -21,28 +22,43 @@ USAGE
 
 wait_for() {
   command="$*"
-  for i in `seq $TIMEOUT` ; do
-    nc -z "$HOST" "$PORT" > /dev/null 2>&1
-    
-    result=$?
-    if [ $result -eq 0 ] ; then
-      if [ -n "$command" ] ; then
-        exec $command
+
+  for ((i=0; i<${#HOSTS[*]}; i++));
+  do
+    timeout=(${TIMEOUT})
+    hostport=(${HOSTS[i]//:/ })
+    HOST=${hostport[0]}
+    PORT=${hostport[1]}
+
+    while [ true ]
+    do
+      nc -z "$HOST" "$PORT" > /dev/null 2>&1
+      result=$?
+      if [ $result -eq 0 ] ; then
+        break
       fi
-      exit 0
-    fi
-    sleep 1
+      sleep 1
+      timeout=$(($timeout-1))
+      if [ $timeout == 0 ] ; then
+        if [ $QUIET -eq 0 ] ; then
+          echo "timed out for ${HOST}:${PORT} ..." >&2
+        fi
+        exit 1
+      fi
+    done
   done
-  echo "Operation timed out" >&2
-  exit 1
+  if [ -n "$command" ] ; then
+    sleep 1
+    exec $command
+  fi
+  exit 0
 }
 
 while [ $# -gt 0 ]
 do
   case "$1" in
     *:* )
-    HOST=$(printf "%s\n" "$1"| cut -d : -f 1)
-    PORT=$(printf "%s\n" "$1"| cut -d : -f 2)
+    HOSTS=("${HOSTS[@]}" "$1")
     shift 1
     ;;
     -q | --quiet)
@@ -72,7 +88,7 @@ do
   esac
 done
 
-if [ "$HOST" = "" -o "$PORT" = "" ]; then
+if [ "${#HOSTS[@]}" -eq 0 ]; then
   echoerr "Error: you need to provide a host and port to test."
   usage 2
 fi
