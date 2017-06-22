@@ -1,8 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
-TIMEOUT=15
+TIMEOUT=0
 QUIET=0
-HOSTS=();
+HOSTS=( )
 
 echoerr() {
   if [ "$QUIET" -ne 1 ]; then printf "%s\n" "$*" 1>&2; fi
