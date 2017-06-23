@@ -49,20 +49,26 @@ To wait for kafka and cassandra container to become available:
 version: '2'
 
 services:
+  cassandra:
+    image: cassandra:3.10
+    ports:
+      - "9042:9042"
+
   kafka:
-  image: spotify/kafka
-  ports:
-    - "2181:2181"
-    - "9092:9092"
-  environment:
-    - ADVERTISED_HOST=kafka
-    - ADVERTISED_PORT=9092
+    image: spotify/kafka
+    ports:
+      - "2181:2181"
+      - "9092:9092"
+    environment:
+      - ADVERTISED_HOST=kafka
+      - ADVERTISED_PORT=9092
 
   backend:
     build: backend
     command: sh -c './wait-for cassandra:9042 kafka:9092 -- npm start'
     depends_on:
-      - db
+    - cassandra
+    - kafka
 ```
 
 ## Testing
