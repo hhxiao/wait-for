@@ -37,9 +37,19 @@ services:
 
   backend:
     build: backend
-    command: sh -c './wait-for db:5432 -- npm start'
+    command: sh -c '/scripts/wait-for db:5432 -- npm start'
+    volumes:
+      - scripts-volume:/scripts
     depends_on:
       - db
+
+  scripts:
+    image: hhxiao/wait-for
+    volumes:
+      - scripts-volume:/wait-for
+
+volumes:
+  scripts-volume:
 ```
 
 
@@ -65,10 +75,20 @@ services:
 
   backend:
     build: backend
-    command: sh -c './wait-for cassandra:9042 kafka:9092 -- npm start'
+    command: sh -c '/scripts/wait-for cassandra:9042 kafka:9092 -- npm start'
+    volumes:
+      - scripts-volume:/scripts
     depends_on:
     - cassandra
     - kafka
+
+    scripts:
+      image: hhxiao/wait-for
+      volumes:
+        - scripts-volume:/wait-for
+
+  volumes:
+    scripts-volume:
 ```
 
 ## Testing

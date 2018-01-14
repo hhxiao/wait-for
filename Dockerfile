@@ -1,3 +1,5 @@
 FROM alpine
-RUN apk add --no-cache bash
-COPY ./wait-for /
+
+COPY ./wait-for /wait-for/
+
+CMD ["tail", "-f" , "/wait-for/wait-for"]
